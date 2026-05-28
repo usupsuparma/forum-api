@@ -82,4 +82,25 @@ describe('JwtTokenManager', () => {
       expect(expectedUsername).toEqual('dicoding');
     });
   });
+
+  describe("verifyAccessToken function", () => {
+    it("should throw AuthenticationError when verification failed", async () => {
+      // Arrange
+      const jwtTokenManager = new JwtTokenManager(jwt);
+      const refreshToken = await jwtTokenManager.createRefreshToken({ username: "dicoding" });
+
+      // Action & Assert
+      const { default: AuthenticationError } = await import("../../../Commons/exceptions/AuthenticationError.js");
+      await expect(jwtTokenManager.verifyAccessToken(refreshToken)).rejects.toThrow(AuthenticationError);
+    });
+
+    it("should not throw error when access token is valid", async () => {
+      // Arrange
+      const jwtTokenManager = new JwtTokenManager(jwt);
+      const accessToken = await jwtTokenManager.createAccessToken({ username: "dicoding" });
+
+      // Action & Assert
+      await expect(jwtTokenManager.verifyAccessToken(accessToken)).resolves.not.toThrow();
+    });
+  });
 });
