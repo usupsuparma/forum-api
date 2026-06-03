@@ -27,6 +27,25 @@ describe('HTTP server', () => {
     expect(response.status).toEqual(404);
   });
 
+  it('should limit access to threads resources to 90 requests per minute', async () => {
+    // Arrange
+    const app = await createServer({});
+    const requestPath = '/threads/rate-limit-probe/not-found';
+
+    // Action
+    for (let i = 0; i < 90; i += 1) {
+      const response = await request(app).get(requestPath);
+      expect(response.status).toEqual(404);
+    }
+
+    const response = await request(app).get(requestPath);
+
+    // Assert
+    expect(response.status).toEqual(429);
+    expect(response.body.status).toEqual('fail');
+    expect(response.body.message).toEqual('terlalu banyak request, coba lagi nanti');
+  });
+
   describe('when POST /users', () => {
     it('should response 201 and persisted user', async () => {
       // Arrange
@@ -338,17 +357,17 @@ describe('HTTP server', () => {
     expect(response.body.message).toEqual('terjadi kegagalan pada server kami');
   });
 
-  describe("when GET /", () => {
-    it("should return 200 and hello world", async () => {
+  describe('when GET /', () => {
+    it('should return 200 and hello world', async () => {
       // Arrange
       const app = await createServer({});
 
       // Action
-      const response = await request(app).get("/");
+      const response = await request(app).get('/');
 
       // Assert
       expect(response.status).toEqual(200);
-      expect(response.body.data).toEqual("Hello world!");
+      expect(response.body.data).toEqual('Hello world!');
     });
   });
 });
