@@ -337,4 +337,18 @@ describe('HTTP server', () => {
     expect(response.body.status).toEqual('error');
     expect(response.body.message).toEqual('terjadi kegagalan pada server kami');
   });
+
+  describe("when GET /", () => {
+    it("should return 200 and hello world", async () => {
+      // Arrange
+      const app = await createServer({});
+
+      // Action
+      const response = await request(app).get("/");
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.data).toEqual("Hello world!");
+    });
+  });
 });
