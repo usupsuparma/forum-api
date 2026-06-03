@@ -39,7 +39,7 @@ jobs:
           script: |
             set -euo pipefail
 
-            cd ~/home/usup/projects/nodejs/forum-api
+            cd /home/usup/projects/nodejs/forum-api
 
             echo "Pull latest code..."
             git fetch origin main
