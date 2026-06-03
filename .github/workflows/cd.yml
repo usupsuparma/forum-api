@@ -46,7 +46,7 @@ jobs:
             git reset --hard origin/main
 
             echo "Install production dependencies..."
-            npm ci --omit=dev --no-audit --no-fund
+            npm ci --no-audit --no-fund
 
             echo "Run database migration..."
             npm run migrate up
