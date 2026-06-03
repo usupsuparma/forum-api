@@ -1,0 +1,57 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-auth-api
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: SSH and deploy app
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          timeout: 60s
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+
+            cd ~/home/usup/projects/nodejs/forum-api
+
+            echo "Pull latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "Install production dependencies..."
+            npm ci --omit=dev --no-audit --no-fund
+
+            echo "Run database migration..."
+            npm run migrate up
+
+            echo "Restart PM2 service..."
+            pm2 restart forum-api --update-env
+
+            echo "Deployment completed."
