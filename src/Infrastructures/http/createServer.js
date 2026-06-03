@@ -16,6 +16,9 @@ const createServer = async (container) => {
 
   // Register routes
   app.use('/users', users(container));
+  app.get("/", (req, res) => {
+    res.status(200).json({ data: "Hello world!" });
+  });
   app.use('/authentications', authentications(container));
   app.use('/threads', threads(container, authMiddleware));
 
