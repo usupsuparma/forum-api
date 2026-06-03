@@ -5,25 +5,33 @@ import users from '../../Interfaces/http/api/users/index.js';
 import authentications from '../../Interfaces/http/api/authentications/index.js';
 import threads from '../../Interfaces/http/api/threads/index.js';
 import createAuthMiddleware from './middleware/authMiddleware.js';
+import createRateLimitMiddleware from './middleware/rateLimitMiddleware.js';
 
 const createServer = async (container) => {
   const app = express();
+  app.set('trust proxy', 1);
 
   // Middleware for parsing JSON
   app.use(express.json());
 
   const authMiddleware = createAuthMiddleware(container);
+  const threadsRateLimitMiddleware = createRateLimitMiddleware({
+    windowMs: 60 * 1000,
+    maxRequests: 90,
+  });
 
   // Register routes
   app.use('/users', users(container));
-  app.get("/", (req, res) => {
-    res.status(200).json({ data: "Hello world!" });
+  app.get('/', (req, res) => {
+    res.status(200).json({ data: 'Hello world!' });
   });
   app.use('/authentications', authentications(container));
-  app.use('/threads', threads(container, authMiddleware));
+  app.use('/threads', threadsRateLimitMiddleware, threads(container, authMiddleware));
 
   // Global error handler
   app.use((error, req, res, next) => {
+    void next;
+
     // bila response tersebut error, tangani sesuai kebutuhan
     const translatedError = DomainErrorTranslator.translate(error);
 
